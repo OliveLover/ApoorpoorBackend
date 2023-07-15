@@ -1,5 +1,7 @@
 spring:
-  config.activate.on-profile: default
+#  config.activate.on-profile: default
+  profiles:
+    default: test
   config:
     import: application-secret.yml
   jpa:
@@ -13,3 +15,27 @@ spring:
     multipart:
       max-request-size: 10MB
       max-file-size: 10MB
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:~/cafeKioskApplication
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
