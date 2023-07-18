@@ -3,23 +3,36 @@ package com.example.apoorpoor_backend.service;
 import com.example.apoorpoor_backend.dto.beggar.BeggarRequestDto;
 import com.example.apoorpoor_backend.dto.beggar.BeggarSearchResponseDto;
 import com.example.apoorpoor_backend.dto.common.StatusResponseDto;
+import com.example.apoorpoor_backend.model.Badge;
 import com.example.apoorpoor_backend.model.Beggar;
+import com.example.apoorpoor_backend.model.GetBadge;
 import com.example.apoorpoor_backend.model.User;
+import com.example.apoorpoor_backend.model.enumType.ExpenditureType;
+import com.example.apoorpoor_backend.repository.badge.BadgeRepository;
+import com.example.apoorpoor_backend.repository.badge.GetBadgeRepository;
 import com.example.apoorpoor_backend.repository.beggar.BeggarRepository;
-
+import com.example.apoorpoor_backend.repository.shop.PointRepository;
 import com.example.apoorpoor_backend.repository.user.UserRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
+import static com.example.apoorpoor_backend.model.enumType.ItemListEnum.top_lv2_01;
 import static com.example.apoorpoor_backend.model.enumType.UserRoleEnum.USER;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -34,6 +47,15 @@ class BeggarServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BadgeRepository badgeRepository;
+
+    @Autowired
+    private GetBadgeRepository getBadgeRepository;
+
+    @Autowired
+    private PointRepository pointRepository;
+
     private User user;
 
     @BeforeEach
@@ -46,6 +68,9 @@ class BeggarServiceTest {
 
     @AfterEach
     public void deleteUser() {
+        pointRepository.deleteAll();
+        getBadgeRepository.deleteAll();
+        badgeRepository.deleteAll();
         beggarRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -115,12 +140,51 @@ class BeggarServiceTest {
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).extracting("beggarId", "userId", "nickname", "point",
-                "level", "badgeList", "description", "gender", "age", "topImage", "bottomImage",
-                "shoesImage", "accImage", "customImage")
-                .contains(beggar.getId(), user.getId(), "그지", 0L,
-                        1L, beggar.getGetBadgeList(), null, "male", 30L, null, null,
+                        "level", "badgeList", "description", "gender", "age", "topImage", "bottomImage",
+                        "shoesImage", "accImage", "customImage")
+                .containsExactly(beggar.getId(), user.getId(), "그지", 0L,
+                        1L, Collections.emptyList(), null, "male", 30L, null, null,
                         null, null, null);
 
+    }
+
+    @Test
+    @DisplayName("뱃지 1개를 저장 한다.")
+    public void saveBadgeNew() {
+        // given
+        Beggar beggar = Beggar.builder().nickname("그지")
+                .user(user).point(0L).level(1L).exp(0L).getBadgeList(new ArrayList<>())
+                .build();
+
+        beggarRepository.save(beggar);
+
+        ExpenditureType expenditureType = ExpenditureType.SAVINGS;
+
+        // when
+        beggarService.saveBadgeNew(user, expenditureType, beggar);
+
+        // then
+        assertThat(badgeRepository.findByBadgeList(beggar.getId())).hasSize(1);
+
+    }
+
+    @Test
+    @DisplayName("뱃지 1개를 저장하고 같은 뱃지를 저장하면 IllegalArgumentException이 발생한다.")
+    public void shouldThrowIllegalArgumentExceptionWhenSavingDuplicateBadge() {
+        // given
+        Beggar beggar = Beggar.builder().nickname("그지")
+                .user(user).point(0L).level(1L).exp(0L).getBadgeList(new ArrayList<>())
+                .build();
+
+        beggarRepository.save(beggar);
+
+        ExpenditureType expenditureType = ExpenditureType.SAVINGS;
+        beggarService.saveBadgeNew(user, expenditureType, beggar);
+
+        // when & then
+        assertThrows(IllegalArgumentException.class, () -> {
+            beggarService.saveBadgeNew(user, expenditureType, beggar);
+        });
     }
 
 }

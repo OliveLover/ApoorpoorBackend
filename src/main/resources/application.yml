@@ -1,9 +1,16 @@
 spring:
 #  config.activate.on-profile: default
   profiles:
-    default: test
+    default: local
   config:
     import: application-secret.yml
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
   jpa:
     properties:
       hibernate:
@@ -21,6 +28,7 @@ spring:
   config:
     activate:
       on-profile: test
+    import: application-secret.yml
 
   datasource:
     url: jdbc:h2:mem:~/cafeKioskApplication
