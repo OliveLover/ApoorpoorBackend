@@ -105,7 +105,7 @@ public class BeggarService {
     }
 
 
-    private List<Badge> getBadgeList(Long beggarId) {
+    public List<Badge> getBadgeList(Long beggarId) {
         return badgeRepository.findByBadgeList(beggarId);
     }
 

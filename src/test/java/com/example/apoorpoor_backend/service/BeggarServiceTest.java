@@ -187,4 +187,24 @@ class BeggarServiceTest {
         });
     }
 
+    @Test
+    @DisplayName("뱃지 1개를 저장하면 1개의 뱃지가 저장된 리스트를 조회한다.")
+    public void getBadgeList() {
+        // given
+        Beggar beggar = Beggar.builder().nickname("그지")
+                .user(user).point(0L).level(1L).exp(0L).getBadgeList(new ArrayList<>())
+                .build();
+
+        beggarRepository.save(beggar);
+
+        ExpenditureType expenditureType = ExpenditureType.SAVINGS;
+        beggarService.saveBadgeNew(user, expenditureType, beggar);
+
+        // when
+        List<Badge> getBadge = beggarService.getBadgeList(beggar.getId());
+
+        // then
+        assertThat(getBadge).hasSize(1);
+    }
+
 }
