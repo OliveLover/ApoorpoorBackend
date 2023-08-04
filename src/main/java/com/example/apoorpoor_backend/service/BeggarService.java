@@ -43,10 +43,10 @@ public class BeggarService {
         User findUser = userCheck(username);
         boolean badWordCheck = badIdCheck(beggarRequestDto.getNickname());
 
-        if(badWordCheck) throw new IllegalArgumentException("사회적으로 부적절한 언어가 포함되어 있습니다.");
+        if (badWordCheck) throw new IllegalArgumentException("사회적으로 부적절한 언어가 포함되어 있습니다.");
 
         Optional<Beggar> findBeggar = beggarRepository.findByUsername(username);
-        if(findBeggar.isPresent())
+        if (findBeggar.isPresent())
             return new ResponseEntity<>(new StatusResponseDto("이미 푸어가 존재합니다."), HttpStatus.BAD_REQUEST);
 
         Beggar beggar = Beggar.builder()
@@ -59,56 +59,14 @@ public class BeggarService {
 
         beggarRepository.save(beggar);
 
-        return new ResponseEntity<>(new StatusResponseDto("푸어가 생성되었어요..."), HttpStatus.OK );
+        return new ResponseEntity<>(new StatusResponseDto("푸어가 생성되었어요..."), HttpStatus.OK);
     }
-
-    @Transactional(readOnly = true)
-    public ResponseEntity<BeggarSearchResponseDto> myBeggar(String username) {
-        User user = userCheck(username);
-        boolean beggarCheck = beggarRepository.existsBeggarByUserId(user.getId());
-
-        if(!beggarCheck) {
-           return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-        }
-        Beggar beggar = beggarCheck(username);
-
-        Long beggarId = beggar.getId();
-        Long userId = user.getId();
-        String nickname = beggar.getNickname();
-        Long point = beggar.getPoint();
-        Long level = beggar.getLevel();
-        String description = beggar.getDescription();
-        String gender = user.getGender();
-        Long age = user.getAge();
-        Long exp = beggar.getExp();
-        List<Badge> badgeList = getBadgeList(beggarId);
-
-        String topImage = beggar.getTop() == null ? null : itemUrl + beggar.getTop().getItemImage();
-        String bottomImage = beggar.getBottom() == null ? null : itemUrl  + beggar.getBottom().getItemImage();
-        String shoesImage = beggar.getShoes() == null ? null : itemUrl  + beggar.getShoes().getItemImage();
-        String accImage = beggar.getAcc() == null ? null : itemUrl  + beggar.getAcc().getItemImage();
-        String customImage = beggar.getCustom() == null ? null : itemUrl + beggar.getCustom().getItemImage();
-
-        BeggarSearchResponseDto beggarSearchResponseDto = BeggarSearchResponseDto
-                .builder().beggarId(beggarId)
-                .userId(userId).nickname(nickname)
-                .point(point).level(level)
-                .exp(exp)
-                .badgeList(badgeList)
-                .description(description).gender(gender)
-                .age(age).topImage(topImage).bottomImage(bottomImage)
-                .shoesImage(shoesImage).accImage(accImage)
-                .customImage(customImage)
-                .build();
-
-        return new ResponseEntity<>(beggarSearchResponseDto, HttpStatus.OK);
-    }
-
 
     public List<Badge> getBadgeList(Long beggarId) {
         return badgeRepository.findByBadgeList(beggarId);
     }
 
+    @Transactional(readOnly = true)
     public ResponseEntity<BeggarSearchResponseDto> getUserBeggar(Long user_id) {
         User user = userIdCheck(user_id);
         Beggar beggar = beggarIdCheck(user_id);
@@ -128,7 +86,6 @@ public class BeggarService {
         String shoesImage = beggar.getShoes() == null ? null : beggar.getShoes().getItemImage();
         String accImage = beggar.getAcc() == null ? null : beggar.getAcc().getItemImage();
         String customImage = beggar.getCustom() == null ? null : beggar.getCustom().getItemImage();
-
 
 
         BeggarSearchResponseDto beggarSearchResponseDto = BeggarSearchResponseDto
@@ -151,13 +108,13 @@ public class BeggarService {
 
         boolean badWordCheck = badIdCheck(nickname);
 
-        if(badWordCheck) {
+        if (badWordCheck) {
             return new ResponseEntity<>("사회적으로 부적절한 언어가 포함되어 있습니다.", HttpStatus.FORBIDDEN);
         }
 
         boolean duplicateCheck = beggarRepository.existsBeggarByNickname(nickname);
 
-        if(duplicateCheck) {
+        if (duplicateCheck) {
             return new ResponseEntity<>("이미 존재 하는 아이디 입니다.", HttpStatus.BAD_REQUEST);
         }
 
@@ -170,7 +127,7 @@ public class BeggarService {
         badIdCheck(beggarRequestDto.getNickname());
 
         Optional<Beggar> findBeggar = beggarRepository.findByNickname(beggarRequestDto.getNickname());
-        if(findBeggar.isPresent())
+        if (findBeggar.isPresent())
             return new ResponseEntity<>(new StatusResponseDto("중복된 푸어의 이름이 존재합니다."), HttpStatus.BAD_REQUEST);
 
         beggar.update(beggarRequestDto);
@@ -188,11 +145,11 @@ public class BeggarService {
 
         String pointDescription = expType.getDescription();
 
-        if(expType.equals(ExpType.BEST_SAVER)) {
+        if (expType.equals(ExpType.BEST_SAVER)) {
             pointDescription = ExpType.BEST_SAVER.getDescription();
         }
 
-        if(expType.equals(ExpType.LEVEL_UP)) {
+        if (expType.equals(ExpType.LEVEL_UP)) {
             pointDescription = ExpType.LEVEL_UP.getDescription();
         }
 
@@ -221,13 +178,13 @@ public class BeggarService {
         List<ExpenditureType> badgeList = Arrays.asList(ExpenditureType.values());
 
         for (ExpenditureType expenditureType : badgeList) {
-            if(badgeCriteriaCheck(expenditureType, user.getId())) saveBadgeNew(user, expenditureType, beggar);
+            if (badgeCriteriaCheck(expenditureType, user.getId())) saveBadgeNew(user, expenditureType, beggar);
         }
 
     }
 
     private boolean badgeCriteriaCheck(ExpenditureType expenditureType, Long userId) {
-        return switch (expenditureType){
+        return switch (expenditureType) {
             case UTILITY_BILL -> false;
             case CONDOLENCE_EXPENSE -> ledgerHistoryRepository.checkEXPType2(expenditureType, userId);
             case TRANSPORTATION -> ledgerHistoryRepository.checkEXPType3(expenditureType, userId);
@@ -261,7 +218,7 @@ public class BeggarService {
                 .map(GetBadge::getBadge)
                 .anyMatch(b -> b.getBadgeNum().equals(badgeNum));
 
-        if(!hasBadge) {
+        if (!hasBadge) {
 
             Badge badge = new Badge(badgeNum, badgeTitle, badgeImage);
 
@@ -286,7 +243,7 @@ public class BeggarService {
         ItemListEnum itemListEnum = beggarCustomRequestDto.getItemListEnum();
         UnWearEnum unWearEnum = beggarCustomRequestDto.getUnWearEnum();
 
-        if(unWearEnum != null) {
+        if (unWearEnum != null) {
             String unWear = unWearEnum.getUnWearPart();
 
             switch (unWear) {
@@ -299,7 +256,7 @@ public class BeggarService {
             }
         } else {
 
-            Item findItem = itemRepository.findItemByBeggar_IdAndItemNum(beggar.getId(),itemListEnum.getItemNum())
+            Item findItem = itemRepository.findItemByBeggar_IdAndItemNum(beggar.getId(), itemListEnum.getItemNum())
                     .orElseThrow(() -> new IllegalArgumentException("가지고 있지 않은 아이템 입니다.")
                     );
 
